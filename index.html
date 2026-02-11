@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的番号库查询</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <style>
+        body { font-family: -apple-system, sans-serif; padding: 10px; background: #f4f4f9; }
+        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        /* 手机端适配：让文字小一点 */
+        table { font-size: 14px; width: 100% !important; }
+        /* 重复项红色高亮 */
+        .row-dup { background-color: #ffebee !important; color: #d32f2f !important; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>📂 私人番号库</h2>
+        <table id="example" class="display">
+            <thead>
+                <tr><th>番号</th><th>来源/隶属</th></tr>
+            </thead>
+        </table>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+    <script>
+        // 自动解析同目录下的 db.csv
+        Papa.parse("db.csv", {
+            download: true,
+            header: true,
+            complete: function(results) {
+                $('#example').DataTable({
+                    data: results.data,
+                    columns: [
+                        { data: "code" },
+                        { data: "source" }
+                    ],
+                    // 分页和搜索的中文化
+                    language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/zh-HANS.json" },
+                    // 高亮重复行
+                    createdRow: function(row, data) {
+                        if (data.is_dup == "1") {
+                            $(row).addClass('row-dup');
+                        }
+                    },
+                    pageLength: 25, // 默认每页显示25条
+                    responsive: true
+                });
+            }
+        });
+    </script>
+</body>
+</html>
