@@ -1,59 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的番号库查询</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>私人番号库 - 滚动版</title>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <style>
-        body { font-family: -apple-system, sans-serif; padding: 10px; background: #f4f4f9; }
-        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; }
-        /* 手机端适配：让文字小一点 */
-        table { font-size: 14px; width: 100% !important; }
-        /* 重复项红色高亮 */
-        .row-dup { background-color: #ffebee !important; color: #d32f2f !important; font-weight: bold; }
+        body { font-family: -apple-system, sans-serif; padding: 0; margin: 0; background: #f0f2f5; }
+        .header { background: #007bff; color: white; padding: 15px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .container { padding: 10px; }
+        /* 表格整体样式 */
+        table.dataTable { border-collapse: collapse !important; background: white; border-radius: 8px; overflow: hidden; }
+        /* 重复项高亮：淡红色背景 */
+        .row-dup { background-color: #fff1f0 !important; color: #cf1322 !important; font-weight: 500; }
+        /* 搜索框美化 */
+        .dataTables_filter { margin-bottom: 15px !important; float: none !important; text-align: left !important; }
+        .dataTables_filter input { width: 100% !important; height: 40px; border-radius: 20px; border: 1px solid #ddd; padding: 0 15px; box-sizing: border-box; }
+        /* 隐藏原有的分页和底部信息，实现纯滚动感 */
+        .dataTables_info, .dataTables_paginate { display: none !important; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>📂 私人番号库</h2>
-        <table id="example" class="display">
-            <thead>
-                <tr><th>番号</th><th>来源/隶属</th></tr>
-            </thead>
-        </table>
-    </div>
 
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<div class="header">
+    <h3 style="margin:0;">📂 我的资源库 (滚动查询)</h3>
+</div>
 
-    <script>
-        // 自动解析同目录下的 db.csv
-        Papa.parse("db.csv", {
-            download: true,
-            header: true,
-            complete: function(results) {
-                $('#example').DataTable({
-                    data: results.data,
-                    columns: [
-                        { data: "code" },
-                        { data: "source" }
-                    ],
-                    // 分页和搜索的中文化
-                    language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/zh-HANS.json" },
-                    // 高亮重复行
-                    createdRow: function(row, data) {
-                        if (data.is_dup == "1") {
-                            $(row).addClass('row-dup');
-                        }
-                    },
-                    pageLength: 25, // 默认每页显示25条
-                    responsive: true
-                });
-            }
-        });
-    </script>
+<div class="container">
+    <table id="myTable" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>番号</th>
+                <th>来源清单</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+<script>
+    Papa.parse("db.csv", {
+        download: true,
+        header: true,
+        complete: function(results) {
+            $('#myTable').DataTable({
+                data: results.data,
+                columns: [
+                    { data: "code" },
+                    { data: "source" }
+                ],
+                // 核心配置：关闭分页，开启滚动
+                paging: false,       // 禁用分页，一次性显示所有行
+                scrollY: "calc(100vh - 160px)", // 自动计算高度，充满屏幕
+                scrollCollapse: true,
+                dom: 'firt',         // 只显示搜索框(f)、处理说明(i)、表格(r)、表头(t)，去掉分页
+                language: {
+                    search: "",
+                    searchPlaceholder: "🔍 输入搜索内容..."
+                },
+                // 重复项变红逻辑
+                createdRow: function(row, data) {
+                    if (data.is_dup == "1") {
+                        $(row).addClass('row-dup');
+                    }
+                }
+            });
+        }
+    });
+</script>
+
 </body>
 </html>
