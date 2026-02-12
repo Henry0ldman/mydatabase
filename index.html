@@ -9,17 +9,36 @@
         body { font-family: -apple-system, sans-serif; padding: 0; margin: 0; background: #f8f9fa; }
         .header { background: #333; color: white; padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; }
         .container { padding: 10px; }
+        
+        /* 表格样式优化 */
         table.dataTable { width: 100% !important; background: white; border-collapse: collapse !important; }
+        
+        /* 强制所有表头据中 */
+        table.dataTable thead th { 
+            text-align: center !important; 
+            background: #eee; 
+            padding: 12px 5px;
+            color: #333;
+        }
+
+        /* 修正大小列：去掉灰色，恢复正常字号，并让内容也据中 */
+        .col-size-normal { 
+            color: inherit !important; /* 继承正文颜色 */
+            font-size: 14px !important; /* 恢复正常大小 */
+            text-align: center !important; 
+        }
+
         /* 高亮重复行 */
         .row-dup td { background-color: #fff1f0 !important; color: #cf1322 !important; font-weight: bold !important; }
-        /* 大搜索框 */
+        
+        /* 大搜索框样式保持不变 */
         .dataTables_filter { width: 100%; margin-bottom: 15px; float: none !important; }
         .dataTables_filter input { 
             width: 100% !important; height: 50px; padding: 12px; font-size: 18px; 
             border-radius: 8px; border: 2px solid #ddd; box-sizing: border-box; outline: none;
         }
+        
         .dataTables_paginate, .dataTables_length, .dataTables_info { display: none !important; }
-        .col-size { color: #666; font-size: 13px; text-align: center; }
     </style>
 </head>
 <body>
@@ -45,25 +64,24 @@
 <script>
     $.fn.dataTable.ext.errMode = 'none';
 
-    // 使用 PapaParse 读取 CSV
     Papa.parse("db.csv", {
         download: true,
-        header: true,          // 开启表头模式，自动匹配字段名
+        header: true,
         skipEmptyLines: true,
         complete: function(results) {
             $('#myTable').DataTable({
                 data: results.data,
                 columns: [
-                    { data: "code" },  // 匹配 CSV 中的 code 字段
+                    { data: "code" },
                     { 
-                        data: "size",  // 匹配 CSV 中的 size 字段
-                        className: "col-size",
+                        data: "size", 
+                        className: "col-size-normal", // 使用修正后的样式名
                         render: function(data) {
                             if (!data || data === "-" || data === "0.0") return "-";
                             return data + " GB";
                         }
                     },
-                    { data: "source" } // 匹配 CSV 中的 source 字段
+                    { data: "source" }
                 ],
                 paging: false,
                 scrollY: 'calc(100vh - 180px)',
@@ -71,7 +89,6 @@
                 dom: 'ft',
                 language: { search: "", searchPlaceholder: "🔍 搜索番号或清单..." },
                 createdRow: function(row, data) {
-                    // 只要 is_dup 字段为 1 或 "1"，就高亮
                     if (String(data.is_dup).trim() === "1") {
                         $(row).addClass('row-dup');
                     }
