@@ -11,41 +11,47 @@
         .container { padding: 10px; }
         .dt-error-message { display: none !important; }
         
-        /* 表格样式 */
-        table.dataTable { width: 100% !important; background: white; border-collapse: collapse !important; }
+        /* 表格通用样式 */
+        table.dataTable { width: 100% !important; background: white; border-collapse: collapse !important; font-size: 14px; }
+        table.dataTable thead th { background: #eee; border-bottom: 1px solid #ccc; padding: 10px 5px; }
+        table.dataTable td { padding: 8px 5px; border-bottom: 1px solid #eee; }
+
+        /* 重复项高亮 */
         .row-dup { background-color: #fff1f0 !important; color: #cf1322 !important; font-weight: bold; }
 
-        /* --- 搜索框大尺寸美化区 --- */
+        /* 搜索框大尺寸美化 */
         .dataTables_filter { width: 100%; margin-bottom: 15px; float: none !important; text-align: left !important; }
         .dataTables_filter input { 
             width: 100% !important; 
-            height: 50px;           /* 增加高度 */
-            padding: 12px 15px;      /* 增加内边距 */
-            font-size: 18px;         /* 增大输入文字 */
-            border-radius: 8px;      /* 圆角更柔和 */
-            border: 2px solid #ddd;  /* 边框加粗 */
+            height: 50px; 
+            padding: 12px 15px; 
+            font-size: 18px; 
+            border-radius: 8px; 
+            border: 2px solid #ddd; 
             box-sizing: border-box;
-            transition: all 0.3s;    /* 增加过渡动画 */
             outline: none;
         }
-        /* 点击搜索框时的发光效果 */
-        .dataTables_filter input:focus {
-            border-color: #007aff;
-            box-shadow: 0 0 8px rgba(0,122,255,0.2);
-            background: #fff;
-        }
+        .dataTables_filter input:focus { border-color: #007aff; box-shadow: 0 0 8px rgba(0,122,255,0.2); }
 
-        .dataTables_paginate, .dataTables_length { display: none !important; }
+        /* 隐藏不必要的插件元素 */
+        .dataTables_paginate, .dataTables_length, .dataTables_info { display: none !important; }
+        
+        /* 针对手机端微调列宽 */
+        .col-size { color: #666; font-size: 12px; text-align: right; }
     </style>
 </head>
 <body>
 
-<div class="header"><h3>我的番号库 (全滚动)</h3></div>
+<div class="header"><h3>我的番号库 (含体积统计)</h3></div>
 
 <div class="container">
-    <table id="myTable" class="display nowrap" style="width:100%">
+    <table id="myTable" class="display" style="width:100%">
         <thead>
-            <tr><th>番号</th><th>来源/隶属文件</th></tr>
+            <tr>
+                <th width="30%">番号</th>
+                <th width="20%">大小</th>
+                <th width="50%">隶属清单</th>
+            </tr>
         </thead>
     </table>
 </div>
@@ -65,16 +71,23 @@
             $('#myTable').DataTable({
                 data: results.data,
                 columns: [
-                    { data: "code", title: "番号" },
-                    { data: "source", title: "来源/隶属文件" }
+                    { data: "code" },
+                    { 
+                        data: "size", 
+                        className: "col-size",
+                        render: function(data) {
+                            return data && data !== "-" ? data + " GB" : "-";
+                        }
+                    },
+                    { data: "source" }
                 ],
                 paging: false,
-                scrollY: 'calc(100vh - 180px)', // 稍微调整了滚动高度，给大的搜索框留空间
+                scrollY: 'calc(100vh - 180px)',
                 scrollCollapse: true,
                 dom: 'ft',
                 language: {
                     search: "",
-                    searchPlaceholder: "🔍 输入番号或关键字查询..."
+                    searchPlaceholder: "🔍 搜索番号、清单或大小..."
                 },
                 createdRow: function(row, data) {
                     if (data.is_dup == "1") {
