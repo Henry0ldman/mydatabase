@@ -2,6 +2,8 @@ import os
 import re
 import pandas as pd
 import csv
+import subprocess
+from datetime import datetime
 
 # ================= 配置区 =================
 SCAN_PATHS = [
@@ -86,7 +88,6 @@ def main():
         reports = info['labels']
         is_dup = 1 if (history_label_clean in reports and len(reports - {history_label_clean}) > 0) else 0
         size_gb = round(info['size_bytes'] / (1024**3), 2)
-        
         final_list.append({
             'code': code,
             'size': size_gb if size_gb > 0 else "-",
@@ -94,13 +95,28 @@ def main():
             'is_dup': is_dup
         })
 
-    # 5. 导出
+    # 5. 导出文件
     df = pd.DataFrame(final_list).sort_values('code')
-    # 本地预览表
     df.rename(columns={'code':'番号','size':'大小(GB)','source':'隶属清单'}).to_excel("全部数据汇总比对.xlsx", index=False)
-    # GitHub 数据库 (强制加引号保护，防止逗号干扰)
     df[['code', 'size', 'source', 'is_dup']].to_csv("db.csv", index=False, encoding='utf-8-sig', quoting=csv.QUOTE_ALL)
-    print("✅ Python 处理完成，db.csv 已生成。")
+    print("✅ 本地处理完成。")
+
+def auto_push():
+    """Git 自动化流程"""
+    try:
+        print("正在同步至 GitHub...")
+        # 强制设置推送分支为 main (或 master)
+        subprocess.run(["git", "add", "db.csv"], check=True)
+        msg = f"AutoUpdate_{datetime.now().strftime('%m%d_%H%M')}"
+        subprocess.run(["git", "commit", "-m", msg], check=True)
+        # 第一次推送建议加上 -u origin main
+        subprocess.run(["git", "push"], check=True)
+        print("🚀 同步成功！数据已更新。")
+    except Exception as e:
+        print(f"❌ 同步失败: {e}\n提示：请确认已在文件夹内执行过 git remote add...")
 
 if __name__ == "__main__":
     main()
+    choice = input("\n是否同步到网页? (y/n): ").strip().lower()
+    if choice == 'y':
+        auto_push()
