@@ -9,16 +9,32 @@
         body { font-family: -apple-system, sans-serif; padding: 0; margin: 0; background: #f8f9fa; }
         .header { background: #333; color: white; padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; }
         .container { padding: 10px; }
-        /* 报错拦截：隐藏 DataTables 的默认弹窗报错 */
         .dt-error-message { display: none !important; }
+        
         /* 表格样式 */
         table.dataTable { width: 100% !important; background: white; border-collapse: collapse !important; }
-        /* 重复项高亮 */
         .row-dup { background-color: #fff1f0 !important; color: #cf1322 !important; font-weight: bold; }
-        /* 搜索框美化 */
-        .dataTables_filter { width: 100%; margin-bottom: 10px; float: none !important; text-align: left !important; }
-        .dataTables_filter input { width: 100% !important; padding: 10px; border-radius: 5px; border: 1px solid #ccc; box-sizing: border-box; }
-        /* 隐藏分页控件，确保只有滚动 */
+
+        /* --- 搜索框大尺寸美化区 --- */
+        .dataTables_filter { width: 100%; margin-bottom: 15px; float: none !important; text-align: left !important; }
+        .dataTables_filter input { 
+            width: 100% !important; 
+            height: 50px;           /* 增加高度 */
+            padding: 12px 15px;      /* 增加内边距 */
+            font-size: 18px;         /* 增大输入文字 */
+            border-radius: 8px;      /* 圆角更柔和 */
+            border: 2px solid #ddd;  /* 边框加粗 */
+            box-sizing: border-box;
+            transition: all 0.3s;    /* 增加过渡动画 */
+            outline: none;
+        }
+        /* 点击搜索框时的发光效果 */
+        .dataTables_filter input:focus {
+            border-color: #007aff;
+            box-shadow: 0 0 8px rgba(0,122,255,0.2);
+            background: #fff;
+        }
+
         .dataTables_paginate, .dataTables_length { display: none !important; }
     </style>
 </head>
@@ -39,7 +55,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
 <script>
-    // 强制禁用 DataTables 的 Alert 报错弹窗，改用控制台输出
     $.fn.dataTable.ext.errMode = 'none';
 
     Papa.parse("db.csv", {
@@ -47,38 +62,26 @@
         header: true,
         skipEmptyLines: true,
         complete: function(results) {
-            if (results.data.length === 0) {
-                console.error("CSV 数据为空，请检查 db.csv 文件内容。");
-                return;
-            }
-
             $('#myTable').DataTable({
                 data: results.data,
                 columns: [
                     { data: "code", title: "番号" },
                     { data: "source", title: "来源/隶属文件" }
                 ],
-                // 彻底禁用分页
                 paging: false,
-                // 开启垂直滚动
-                scrollY: 'calc(100vh - 150px)',
+                scrollY: 'calc(100vh - 180px)', // 稍微调整了滚动高度，给大的搜索框留空间
                 scrollCollapse: true,
-                // 只保留搜索框(f)和表格(t)
                 dom: 'ft',
                 language: {
                     search: "",
-                    searchPlaceholder: "🔍 快速搜索..."
+                    searchPlaceholder: "🔍 输入番号或关键字查询..."
                 },
-                // 重复变色
                 createdRow: function(row, data) {
                     if (data.is_dup == "1") {
                         $(row).addClass('row-dup');
                     }
                 }
             });
-        },
-        error: function(err) {
-            console.error("无法读取 db.csv，请确认文件是否存在于同一目录下。");
         }
     });
 </script>
