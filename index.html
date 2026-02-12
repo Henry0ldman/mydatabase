@@ -9,18 +9,17 @@
         body { font-family: -apple-system, sans-serif; padding: 0; margin: 0; background: #f8f9fa; }
         .header { background: #333; color: white; padding: 10px; text-align: center; position: sticky; top: 0; z-index: 1000; }
         .container { padding: 10px; }
-        
-        /* 强制表格样式 */
         table.dataTable { width: 100% !important; background: white; border-collapse: collapse !important; }
-        /* 修正高亮样式：确保针对单元格着色 */
-        .row-dup td { background-color: #fff1f0 !important; color: #cf1322 !important; font-weight: bold; }
-        
+        /* 高亮重复行 */
+        .row-dup td { background-color: #fff1f0 !important; color: #cf1322 !important; font-weight: bold !important; }
+        /* 大搜索框 */
         .dataTables_filter { width: 100%; margin-bottom: 15px; float: none !important; }
         .dataTables_filter input { 
             width: 100% !important; height: 50px; padding: 12px; font-size: 18px; 
             border-radius: 8px; border: 2px solid #ddd; box-sizing: border-box; outline: none;
         }
         .dataTables_paginate, .dataTables_length, .dataTables_info { display: none !important; }
+        .col-size { color: #666; font-size: 13px; text-align: center; }
     </style>
 </head>
 <body>
@@ -31,9 +30,9 @@
     <table id="myTable" class="display" style="width:100%">
         <thead>
             <tr>
-                <th>番号</th>
-                <th>大小</th>
-                <th>来源清单</th>
+                <th width="35%">番号</th>
+                <th width="20%">大小</th>
+                <th width="45%">隶属清单</th>
             </tr>
         </thead>
     </table>
@@ -46,45 +45,34 @@
 <script>
     $.fn.dataTable.ext.errMode = 'none';
 
+    // 使用 PapaParse 读取 CSV
     Papa.parse("db.csv", {
         download: true,
-        header: false,         // 改为 false，我们手动处理表头
+        header: true,          // 开启表头模式，自动匹配字段名
         skipEmptyLines: true,
         complete: function(results) {
-            // 排除第一行（表头），从第二行开始处理数据
-            const rawData = results.data.slice(1); 
-            
-            // 重新映射数据：假设顺序是 0:番号, 1:来源, 2:大小, 3:是否重复
-            const formattedData = rawData.map(row => {
-                return {
-                    code: row[0],
-                    source: row[1],
-                    size: row[2],
-                    is_dup: row[3]
-                };
-            });
-
             $('#myTable').DataTable({
-                data: formattedData,
+                data: results.data,
                 columns: [
-                    { data: "code" },
+                    { data: "code" },  // 匹配 CSV 中的 code 字段
                     { 
-                        data: "size", 
+                        data: "size",  // 匹配 CSV 中的 size 字段
+                        className: "col-size",
                         render: function(data) {
                             if (!data || data === "-" || data === "0.0") return "-";
                             return data + " GB";
                         }
                     },
-                    { data: "source" }
+                    { data: "source" } // 匹配 CSV 中的 source 字段
                 ],
                 paging: false,
                 scrollY: 'calc(100vh - 180px)',
                 scrollCollapse: true,
                 dom: 'ft',
-                language: { search: "", searchPlaceholder: "🔍 搜索..." },
+                language: { search: "", searchPlaceholder: "🔍 搜索番号或清单..." },
                 createdRow: function(row, data) {
-                    // 只要第四列包含数字 1，就变红
-                    if (String(data.is_dup).indexOf("1") !== -1) {
+                    // 只要 is_dup 字段为 1 或 "1"，就高亮
+                    if (String(data.is_dup).trim() === "1") {
                         $(row).addClass('row-dup');
                     }
                 }
